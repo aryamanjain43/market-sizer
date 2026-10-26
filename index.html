@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Sizer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Market Sizer</h1>
+    <p class="sub">Estimate TAM, SAM and SOM two ways, check that they agree, and see which assumption your answer depends on most.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row">
+        <h2>Scenario</h2>
+        <div class="controls">
+          <select id="preset" aria-label="Load an example">
+            <option value="">Load an example…</option>
+            <option value="students">Budgeting app for US college students</option>
+            <option value="dental">Scheduling software for US dental practices</option>
+            <option value="blank">Start blank</option>
+          </select>
+          <button type="button" class="ghost" id="copy">Copy summary</button>
+          <button type="button" class="ghost" id="export">Export CSV</button>
+        </div>
+      </div>
+      <label class="wide">Scenario name
+        <input id="name" placeholder="e.g. Budgeting app for US college students">
+      </label>
+      <p class="status" id="status" role="status"></p>
+    </section>
+
+    <section class="card headline">
+      <svg id="rings" viewBox="0 0 240 240" role="img" aria-label="TAM, SAM and SOM drawn as nested circles"></svg>
+      <dl class="totals">
+        <div class="t-tam"><dt>TAM <span class="hint">total addressable</span></dt><dd id="tam">–</dd></div>
+        <div class="t-sam"><dt>SAM <span class="hint">serviceable</span></dt><dd id="sam">–</dd></div>
+        <div class="t-som"><dt>SOM <span class="hint">obtainable</span></dt><dd id="som">–</dd></div>
+        <div class="t-bu"><dt>Bottom-up <span class="hint">cross-check</span></dt><dd id="bu">–</dd><span id="verdict" class="tag"></span></div>
+      </dl>
+    </section>
+
+    <div class="two-col">
+      <section class="card">
+        <h2>Top-down</h2>
+        <form id="td" novalidate>
+          <label class="wide">Starting population <span class="hint">people or businesses</span>
+            <input id="population" type="number" min="1" step="1">
+          </label>
+          <fieldset class="wide">
+            <legend>Narrow it down <span class="hint">each filter keeps a % of the step before</span></legend>
+            <div id="filters"></div>
+            <button type="button" class="link" id="add-filter">+ Add filter</button>
+          </fieldset>
+          <label>Revenue per customer <span class="hint">$ per year</span>
+            <input id="arpu" type="number" min="0" step="1">
+          </label>
+          <label>Serviceable <span class="hint">% of TAM you can reach</span>
+            <input id="serviceable" type="number" min="0" max="100" step="1">
+          </label>
+          <label>Obtainable share <span class="hint">% of SAM you can win</span>
+            <input id="share" type="number" min="0" max="100" step="0.5">
+          </label>
+        </form>
+        <ul class="errors" id="td-errors"></ul>
+        <div class="table-wrap">
+          <table id="funnel"><thead><tr><th>Step</th><th class="num">Keeps</th><th class="num">Count</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Bottom-up</h2>
+        <form id="bu-form" novalidate>
+          <label class="wide">Target accounts <span class="hint">in your launch market</span>
+            <input id="accounts" type="number" min="1" step="1">
+          </label>
+          <label>Reached <span class="hint">% your go-to-market touches</span>
+            <input id="reached" type="number" min="0" max="100" step="1">
+          </label>
+          <label>Conversion <span class="hint">% who buy</span>
+            <input id="conversion" type="number" min="0" max="100" step="0.5">
+          </label>
+          <label>Price <span class="hint">$ per purchase</span>
+            <input id="price" type="number" min="0" step="1">
+          </label>
+          <label>Purchases per year <span class="hint">12 for monthly</span>
+            <input id="frequency" type="number" min="1" step="1">
+          </label>
+        </form>
+        <ul class="errors" id="bu-errors"></ul>
+        <p class="calc" id="bu-calc"></p>
+        <p class="explain" id="bu-explain"></p>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="row">
+        <h2>Five-year outlook</h2>
+        <div class="controls">
+          <label class="inline">Market growth <input id="growth" type="number" step="1"> % / yr</label>
+          <label class="inline">Year-1 share <input id="start-share" type="number" min="0" max="100" step="0.5"> %</label>
+        </div>
+      </div>
+      <div class="bars" id="bars"></div>
+      <div class="table-wrap">
+        <table id="projection"><thead><tr><th>Year</th><th class="num">SAM</th><th class="num">Share</th><th class="num">SOM</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h2>What matters most</h2>
+        <div class="controls">
+          <label class="inline">Default range ± <input id="swing" type="number" min="1" max="90" step="5"> %</label>
+          <button type="button" class="ghost" id="reset-ranges">Reset ranges</button>
+        </div>
+      </div>
+      <p class="sub small">Set a low and high you'd believe for each assumption. Each bar shows how far SOM moves across that range with everything else held at base. The longest bar is the number worth researching first. Faded rows use the default range.</p>
+      <div class="tornado" id="tornado"></div>
+    </section>
+
+    <section class="card how">
+      <h2>How it works</h2>
+      <p><strong>TAM</strong> is everyone who could ever buy, times what they would pay in a year. <strong>SAM</strong> is the slice your product, channels and geography can actually serve. <strong>SOM</strong> is the share of SAM you can realistically win in the near term.</p>
+      <p><strong>Top-down</strong> starts broad and narrows. <strong>Bottom-up</strong> counts what your go-to-market can actually reach and convert. If the two land within 2x of each other, the estimate is probably reasonable. If not, one set of assumptions needs another look.</p>
+      <p class="hint">Example numbers are illustrative assumptions for demonstration, not researched figures.</p>
+    </section>
+  </main>
+
+  <footer>
+    Built by <a href="https://github.com/aryamanjain43">Aryaman Jain</a>. Your inputs are saved in this browser only.
+  </footer>
+
+  <script src="src/sizing.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
