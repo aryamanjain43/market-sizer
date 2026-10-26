@@ -1,0 +1,7 @@
+{
+  "name": "market-sizer",
+  "version": "1.0.0",
+  "description": "TAM, SAM and SOM market sizing tool with top-down and bottom-up estimates, projections and sensitivity analysis",
+  "scripts": { "test": "node --test test/*.test.js" },
+  "license": "MIT"
+}
